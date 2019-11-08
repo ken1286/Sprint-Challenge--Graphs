@@ -1,6 +1,7 @@
 from room import Room
 from player import Player
 from world import World
+from util import Stack, Queue
 
 import random
 
@@ -19,9 +20,112 @@ world.loadGraph(roomGraph)
 world.printRooms()
 player = Player("Name", world.startingRoom)
 
+traversalPath = []
+traversalGraph = {}
 
-# FILL THIS IN
-traversalPath = ['n', 's']
+lastRoomID = player.currentRoom.id
+traversalGraph[lastRoomID] = {}
+exits = player.currentRoom.getExits()
+for exit in exits:
+    traversalGraph[lastRoomID][exit] = '?'
+stack = Stack()
+direction = 's'
+stack.push(player.currentRoom.id)
+
+def opp_dir(dir):
+    if dir == 'n':
+        return 's'
+    elif dir == 's':
+        return 'n'
+    elif dir == 'e':
+        return 'w'
+    else:
+        return 'e'
+
+while len(traversalGraph) < len(roomGraph):
+    while stack.size() > 0:
+        # print('CURRENT STACK:', stack.stack)
+        currentRoomID = stack.pop()
+        # print('CURRENT ROOM ID:', currentRoomID)
+        # print('CURRENT TRAV GRAPH:', traversalGraph)
+        # print('ROOMS EXPLORED:', len(traversalGraph))
+        
+        if currentRoomID not in traversalGraph:
+            traversalGraph[currentRoomID] = {}
+            traversalGraph[lastRoomID][direction] = player.currentRoom.id
+            exits = player.currentRoom.getExits()
+            # fill out exits
+            for exit in exits:
+                if exit == opp_dir(direction):
+                    traversalGraph[player.currentRoom.id][exit] = lastRoomID
+                else:
+                    traversalGraph[player.currentRoom.id][exit] = '?'
+
+            for next_dir in traversalGraph[currentRoomID]:
+                if traversalGraph[player.currentRoom.id][next_dir] is '?':
+                    lastRoomID = player.currentRoom.id
+                    direction = next_dir
+                    player.travel(direction)
+                    traversalPath.append(direction)
+                    print(player.currentRoom.id)
+                    stack.push(player.currentRoom.id)
+                    break
+        else:
+            if player.currentRoom.id is not lastRoomID:
+                traversalGraph[lastRoomID][direction] = player.currentRoom.id
+            # traversalGraph[currentRoomID][opp_dir(direction)] = lastRoomID
+            for next_dir in traversalGraph[currentRoomID]:
+                print(next_dir)
+                if traversalGraph[currentRoomID][next_dir] is '?':
+                    lastRoomID = player.currentRoom.id
+                    direction = next_dir
+                    player.travel(direction)
+                    traversalPath.append(direction)
+                    # traversalGraph[player.currentRoom.id][opp_dir(direction)] = lastRoomID
+                    stack.push(player.currentRoom.id)
+                    break
+                else:
+                    stack.pop()
+    
+    if len(traversalGraph) < len(roomGraph):
+        qq = Queue()
+        qq.enqueue([player.currentRoom.id])
+        lastRoom = player.currentRoom.id
+        visited = set()
+        route = []
+        lastDir = direction
+
+        print('ENTERING QUEUE')
+        while qq.size() > 0:
+            path = qq.dequeue()
+            roomID = path[-1]
+            if roomID not in visited:
+                visited.add(roomID)
+                if '?' in traversalGraph[roomID].values():
+                    break
+                else:
+                    for dir, id in traversalGraph[roomID].items():
+                        lastRoom = path[-1]
+                        new_path = list(path)
+                        new_path.append(id)
+                        qq.enqueue(new_path)
+        print(player.currentRoom.id)
+        path.reverse()
+
+        while len(path) > 1:
+            cur_room = path.pop()
+            for dir in traversalGraph[cur_room]:
+                if traversalGraph[cur_room][dir] == path[-1]:
+                    route.append(dir)
+        
+        for step in route:
+            lastRoomID = player.currentRoom.id
+            traversalPath.append(step)
+            player.travel(step)
+        # print('ROUTE:', route)
+        
+        
+        stack.push(player.currentRoom.id)
 
 
 # TRAVERSAL TEST
