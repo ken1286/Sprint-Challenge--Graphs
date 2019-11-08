@@ -29,7 +29,7 @@ exits = player.currentRoom.getExits()
 for exit in exits:
     traversalGraph[lastRoomID][exit] = '?'
 stack = Stack()
-direction = 's'
+direction = 'w'
 stack.push(player.currentRoom.id)
 
 def opp_dir(dir):
@@ -43,6 +43,7 @@ def opp_dir(dir):
         return 'e'
 
 while len(traversalGraph) < len(roomGraph):
+    
     while stack.size() > 0:
         # print('CURRENT STACK:', stack.stack)
         currentRoomID = stack.pop()
@@ -65,23 +66,21 @@ while len(traversalGraph) < len(roomGraph):
                 if traversalGraph[player.currentRoom.id][next_dir] is '?':
                     lastRoomID = player.currentRoom.id
                     direction = next_dir
-                    player.travel(direction)
-                    traversalPath.append(direction)
-                    print(player.currentRoom.id)
+                    if player.canTravel(direction) is True:
+                        traversalPath.append(direction)
+                        player.travel(direction)
                     stack.push(player.currentRoom.id)
                     break
         else:
             if player.currentRoom.id is not lastRoomID:
                 traversalGraph[lastRoomID][direction] = player.currentRoom.id
-            # traversalGraph[currentRoomID][opp_dir(direction)] = lastRoomID
             for next_dir in traversalGraph[currentRoomID]:
-                print(next_dir)
                 if traversalGraph[currentRoomID][next_dir] is '?':
                     lastRoomID = player.currentRoom.id
                     direction = next_dir
-                    player.travel(direction)
-                    traversalPath.append(direction)
-                    # traversalGraph[player.currentRoom.id][opp_dir(direction)] = lastRoomID
+                    if player.canTravel(direction) is True:
+                        traversalPath.append(direction)
+                        player.travel(direction)
                     stack.push(player.currentRoom.id)
                     break
                 else:
@@ -95,7 +94,7 @@ while len(traversalGraph) < len(roomGraph):
         route = []
         lastDir = direction
 
-        print('ENTERING QUEUE')
+        # print('ENTERING QUEUE')
         while qq.size() > 0:
             path = qq.dequeue()
             roomID = path[-1]
@@ -109,7 +108,6 @@ while len(traversalGraph) < len(roomGraph):
                         new_path = list(path)
                         new_path.append(id)
                         qq.enqueue(new_path)
-        print(player.currentRoom.id)
         path.reverse()
 
         while len(path) > 1:
@@ -120,13 +118,13 @@ while len(traversalGraph) < len(roomGraph):
         
         for step in route:
             lastRoomID = player.currentRoom.id
-            traversalPath.append(step)
-            player.travel(step)
+            if player.canTravel(step) is True:
+                traversalPath.append(step)
+                player.travel(step)
         # print('ROUTE:', route)
         
         
         stack.push(player.currentRoom.id)
-
 
 # TRAVERSAL TEST
 visited_rooms = set()
